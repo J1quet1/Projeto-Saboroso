@@ -1,17 +1,19 @@
 var express = require("express");
 var users = require("./../inc/users");
 var admin = require("./../inc/admin");
+var menus = require("./../inc/menus")
 var router = express.Router();
 
-router.use(function(req, res, next){
+router.use((req, res, next)=>{
 
-    if(['/login'].indexOf(req.url) === -1 && !req.session.user) {
+    if(['/login'].indexOf(req.url) === -1 && (req.session && !req.session.user)) {
+
         res.redirect("/admin/login");
+
     } else {
+        
         next();
     }
-
-    next();
 
 });
 
@@ -33,7 +35,17 @@ router.get("/logout", function(req, res, next){
 
 router.get("/", function(req,res,next){
 
-    res.render("admin/index", admin.getParams(req));
+    admin.dashboard().then(data =>{
+
+    res.render("admin/index", admin.getParams(req, {
+        data
+    }));
+
+    }).catch(err => {
+
+        console.error(err);
+
+    });
 
 });
 
@@ -61,7 +73,9 @@ router.post("/login", function(req,res,next){
 
 router.get("/login", function(req,res,next){
 
-    users.render(req, res, null);
+    users.render("admin/login", {
+        error: null
+    });
 
 });
 
@@ -79,7 +93,19 @@ router.get("/emails", function(req,res,next){
 
 router.get("/menus", function(req,res,next){
 
-    res.render("admin/menus", admin.getParams(req));
+    menus.getMenus().then(data =>{
+
+        res.render("admin/menus", admin.getParams(req, {
+            data
+        }));
+
+    }); 
+
+});
+
+router.post("/menus", function(req, res, next){
+
+    res.send(req.fields);
 
 });
 
